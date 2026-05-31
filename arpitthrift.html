@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arpitthrift</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <!-- EmailJS for Gmail notifications -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --cream: #F7F4EF; --bone: #EDE8DF; --charcoal: #1C1C1C;
+      --mid: #6B6560; --accent: #B5926A; --border: #D9D3C8;
+      --green: #4CAF50; --red: #e53935;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--charcoal); font-family: 'DM Sans', sans-serif; font-weight: 300; line-height: 1.6; }
+
+    /* NAV */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--cream); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; }
+    .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; letter-spacing: 0.08em; text-transform: lowercase; color: var(--charcoal); text-decoration: none; }
+    .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+    .nav-links a { text-decoration: none; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--charcoal); }
+    .admin-btn { background: var(--charcoal) !important; color: var(--cream) !important; padding: 7px 16px; font-size: 0.72rem !important; letter-spacing: 0.1em; }
+    .admin-btn:hover { background: var(--accent) !important; }
+
+    /* HERO */
+    .hero { margin-top: 64px; padding: 100px 48px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: end; border-bottom: 1px solid var(--border); animation: fadeUp 1s ease 0.2s both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+    .hero-text h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 300; line-height: 1.05; letter-spacing: -0.01em; margin-bottom: 24px; }
+    .hero-text h1 em { font-style: italic; color: var(--accent); }
+    .hero-text p { font-size: 0.95rem; color: var(--mid); max-width: 380px; margin-bottom: 36px; }
+    .btn { display: inline-block; padding: 13px 32px; background: var(--charcoal); color: var(--cream); text-decoration: none; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; transition: background 0.25s, color 0.25s; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; }
+    .btn:hover { background: var(--accent); }
+    .btn-outline { background: transparent; color: var(--charcoal); border: 1px solid var(--charcoal); margin-left: 12px; }
+    .btn-outline:hover { background: var(--charcoal); color: var(--cream); }
+    .hero-stat { text-align: right; }
+    .hero-stat .big { font-family: 'Cormorant Garamond', serif; font-size: 5rem; font-weight: 300; line-height: 1; color: var(--border); }
+    .hero-stat p { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-top: 4px; }
+
+    /* FILTER */
+    .filter-bar { padding: 20px 48px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .filter-label { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-right: 8px; white-space: nowrap; }
+    .filter-btn { border: 1px solid var(--border); background: transparent; padding: 7px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .filter-btn:hover, .filter-btn.active { background: var(--charcoal); color: var(--cream); border-color: var(--charcoal); }
+
+    /* SHOP GRID */
+    .shop-section { padding: 60px 48px; }
+    .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 40px; }
+    .section-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; letter-spacing: 0.02em; }
+    .section-header span { font-size: 0.78rem; color: var(--mid); letter-spacing: 0.08em; }
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px; }
+    .item-card { background: var(--bone); cursor: pointer; transition: transform 0.3s ease; position: relative; overflow: hidden; }
+    .item-card:hover { transform: translateY(-4px); }
+    .item-card:hover .item-overlay { opacity: 1; }
+    .item-img-placeholder { width: 100%; aspect-ratio: 3/4; background: var(--bone); display: flex; align-items: center; justify-content: center; font-size: 3rem; position: relative; overflow: hidden; }
+    .item-img-real { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; }
+    .item-img-placeholder::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(0,0,0,0.015) 20px, rgba(0,0,0,0.015) 40px); }
+    .item-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: var(--charcoal); color: var(--cream); padding: 14px 20px; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; opacity: 0; transition: opacity 0.25s; }
+    .item-info { padding: 16px 20px 20px; }
+    .item-tag { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+    .item-name { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 400; margin-bottom: 4px; }
+    .item-details { font-size: 0.78rem; color: var(--mid); margin-bottom: 10px; }
+    .item-price { font-size: 0.9rem; font-weight: 500; letter-spacing: 0.04em; }
+    .item-sold { color: var(--mid); text-decoration: line-through; }
+    .sold-badge { display: inline-block; background: var(--mid); color: var(--cream); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 8px; margin-left: 6px; }
+
+    /* ABOUT */
+    .about-strip { background: var(--charcoal); color: var(--cream); padding: 64px 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+    .about-strip h2 { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; line-height: 1.2; margin-bottom: 20px; }
+    .about-strip h2 em { color: var(--accent); font-style: italic; }
+    .about-strip p { font-size: 0.9rem; color: rgba(247,244,239,0.65); line-height: 1.8; margin-bottom: 20px; }
+    .about-strip .btn { background: var(--accent); }
+    .about-strip .btn:hover { background: var(--cream); color: var(--charcoal); }
+    .about-values { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .value-item .v-num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--accent); line-height: 1; }
+    .value-item .v-label { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(247,244,239,0.5); margin-top: 4px; }
+
+    /* CONTACT */
+    .contact-section { padding: 80px 48px; text-align: center; border-top: 1px solid var(--border); }
+    .contact-section h2 { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; margin-bottom: 12px; }
+    .contact-section p { color: var(--mid); font-size: 0.9rem; margin-bottom: 32px; }
+    .social-links { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .social-link { display: inline-block; padding: 12px 28px; border: 1px solid var(--border); text-decoration: none; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--charcoal); transition: all 0.2s; }
+    .social-link:hover { background: var(--charcoal); color: var(--cream); border-color: var(--charcoal); }
+
+    footer { padding: 24px 48px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--mid); letter-spacing: 0.06em; }
+
+    /* ===== MODALS ===== */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(28,28,28,0.6); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); overflow-y: auto; padding: 20px; }
+    .overlay.open { display: flex; }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+    /* ITEM DETAIL MODAL */
+    .modal { background: var(--cream); max-width: 520px; width: 100%; padding: 40px; position: relative; animation: modalIn 0.3s ease; }
+    .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--mid); line-height: 1; }
+    .modal-tag { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .modal h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; margin-bottom: 8px; }
+    .modal-meta { font-size: 0.82rem; color: var(--mid); margin-bottom: 16px; }
+    .modal-price { font-size: 1.3rem; font-weight: 500; margin-bottom: 20px; }
+    .modal-desc { font-size: 0.88rem; color: var(--mid); line-height: 1.7; margin-bottom: 28px; border-top: 1px solid var(--border); padding-top: 20px; }
+    .modal-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; margin-bottom: 20px; background: var(--bone); display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+    .modal-img img { width: 100%; height: 100%; object-fit: cover; }
+    .modal .btn { width: 100%; text-align: center; display: block; }
+
+    /* CHECKOUT MODAL */
+    .checkout-modal { background: var(--cream); max-width: 560px; width: 100%; padding: 40px; position: relative; animation: modalIn 0.3s ease; max-height: 90vh; overflow-y: auto; }
+    .checkout-modal h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; margin-bottom: 6px; }
+    .checkout-modal .sub { font-size: 0.82rem; color: var(--mid); margin-bottom: 28px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 11px 14px; border: 1px solid var(--border); background: var(--bone); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--charcoal); outline: none; transition: border 0.2s; }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--charcoal); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .upi-section { background: var(--bone); border: 1px solid var(--border); padding: 24px; margin: 24px 0; text-align: center; }
+    .upi-section h4 { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; margin-bottom: 4px; }
+    .upi-id { font-size: 1.1rem; font-weight: 500; color: var(--accent); letter-spacing: 0.06em; margin: 8px 0; }
+    .upi-amount { font-size: 1.5rem; font-weight: 500; margin: 8px 0; }
+    .upi-note { font-size: 0.78rem; color: var(--mid); }
+    .upi-qr { width: 160px; height: 160px; margin: 16px auto; background: white; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .upi-qr img { width: 100%; height: 100%; }
+    .order-summary { background: var(--bone); border: 1px solid var(--border); padding: 16px 20px; margin-bottom: 20px; }
+    .order-summary .os-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }
+    .order-summary .os-row.total { font-weight: 500; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
+    .success-box { text-align: center; padding: 20px 0; }
+    .success-box .tick { font-size: 3rem; margin-bottom: 12px; }
+    .success-box h4 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; margin-bottom: 8px; }
+    .success-box p { font-size: 0.88rem; color: var(--mid); }
+
+    /* ADMIN PANEL */
+    .admin-panel { background: var(--cream); max-width: 680px; width: 100%; padding: 40px; position: relative; animation: modalIn 0.3s ease; max-height: 90vh; overflow-y: auto; }
+    .admin-panel h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; margin-bottom: 4px; }
+    .admin-panel .admin-sub { font-size: 0.8rem; color: var(--mid); margin-bottom: 24px; }
+    .admin-tabs { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+    .admin-tab { padding: 10px 20px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border: none; background: none; color: var(--mid); border-bottom: 2px solid transparent; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .admin-tab.active { color: var(--charcoal); border-bottom-color: var(--charcoal); }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+    .item-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .item-row-img { width: 48px; height: 64px; background: var(--bone); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; overflow: hidden; }
+    .item-row-img img { width: 100%; height: 100%; object-fit: cover; }
+    .item-row-info { flex: 1; min-width: 0; }
+    .item-row-info .irn { font-family: 'Cormorant Garamond', serif; font-size: 1rem; }
+    .item-row-info .irm { font-size: 0.75rem; color: var(--mid); }
+    .item-row-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .action-btn { padding: 6px 14px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; font-family: 'DM Sans', sans-serif; border: 1px solid var(--border); background: none; color: var(--mid); transition: all 0.2s; }
+    .action-btn:hover { background: var(--charcoal); color: var(--cream); border-color: var(--charcoal); }
+    .action-btn.danger:hover { background: var(--red); border-color: var(--red); color: white; }
+    .action-btn.sold-toggle { background: var(--bone); }
+    .add-form { display: grid; gap: 14px; }
+    .add-form input, .add-form textarea, .add-form select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); background: var(--bone); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--charcoal); outline: none; }
+    .add-form input:focus, .add-form textarea:focus { border-color: var(--charcoal); }
+    .add-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .settings-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+    .settings-row label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
+    .settings-row input { padding: 10px 14px; border: 1px solid var(--border); background: var(--bone); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; outline: none; }
+    .settings-row input:focus { border-color: var(--charcoal); }
+    .save-note { font-size: 0.78rem; color: var(--green); margin-top: 8px; display: none; }
+
+    /* LOGIN */
+    .login-box { background: var(--cream); max-width: 380px; width: 100%; padding: 48px 40px; animation: modalIn 0.3s ease; }
+    .login-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; margin-bottom: 20px; }
+    .login-error { font-size: 0.8rem; color: var(--red); margin-top: 8px; display: none; }
+
+    /* IMG UPLOAD */
+    .img-upload-area { border: 1px dashed var(--border); padding: 20px; text-align: center; cursor: pointer; background: var(--bone); margin-bottom: 4px; }
+    .img-upload-area:hover { border-color: var(--charcoal); }
+    .img-upload-area p { font-size: 0.8rem; color: var(--mid); }
+    .img-preview { width: 80px; height: 100px; object-fit: cover; margin: 8px auto 0; display: block; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .hero { padding: 60px 24px 48px; grid-template-columns: 1fr; gap: 32px; }
+      .hero-stat { text-align: left; }
+      .filter-bar { padding: 16px 20px; }
+      .shop-section { padding: 40px 20px; }
+      .about-strip { padding: 48px 24px; grid-template-columns: 1fr; }
+      .contact-section { padding: 60px 24px; }
+      footer { padding: 20px 24px; flex-direction: column; gap: 8px; text-align: center; }
+      .form-row { grid-template-columns: 1fr; }
+      .admin-panel, .checkout-modal, .modal { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">arpitthrift</a>
+  <ul class="nav-links">
+    <li><a href="#shop">Shop</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a class="admin-btn" href="#" onclick="openAdmin();return false;">Admin</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>Curated<br/><em>second</em><br/>chances.</h1>
+    <p>Handpicked thrift finds — quality pieces with history. Each item is one of a kind, just like you.</p>
+    <a href="#shop" class="btn">Browse Listings</a>
+    <a href="#about" class="btn btn-outline">Our Story</a>
+  </div>
+  <div class="hero-stat">
+    <div class="big">100%</div>
+    <p>Unique &amp; pre-loved</p>
+  </div>
+</section>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" onclick="filterItems('all',this)">All</button>
+  <button class="filter-btn" onclick="filterItems('tops',this)">Tops</button>
+  <button class="filter-btn" onclick="filterItems('bottoms',this)">Bottoms</button>
+  <button class="filter-btn" onclick="filterItems('outerwear',this)">Outerwear</button>
+  <button class="filter-btn" onclick="filterItems('accessories',this)">Accessories</button>
+  <button class="filter-btn" onclick="filterItems('available',this)">Available Only</button>
+</div>
+
+<!-- SHOP -->
+<section class="shop-section" id="shop">
+  <div class="section-header">
+    <h2>Current Listings</h2>
+    <span id="item-count">—</span>
+  </div>
+  <div class="items-grid" id="items-grid"></div>
+</section>
+
+<!-- ABOUT -->
+<section class="about-strip" id="about">
+  <div>
+    <h2>Thrifting done<br/><em>differently.</em></h2>
+    <p>Arpitthrift is a small, passion-driven thrift page dedicated to finding pieces that deserve a second life. Every item is personally sourced, cleaned, and described with care.</p>
+    <p>No fast fashion. No bulk reselling. Just one thoughtful find at a time.</p>
+    <a href="#contact" class="btn">Reach Out</a>
+  </div>
+  <div class="about-values">
+    <div class="value-item"><div class="v-num">01</div><div class="v-label">Personally Sourced</div></div>
+    <div class="value-item"><div class="v-num">02</div><div class="v-label">Honest Condition</div></div>
+    <div class="value-item"><div class="v-num">03</div><div class="v-label">Fair Prices</div></div>
+    <div class="value-item"><div class="v-num">04</div><div class="v-label">Sustainable</div></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <h2>Let's connect</h2>
+  <p>DM to claim an item, ask questions, or just say hi.</p>
+  <div class="social-links">
+    <a href="#" class="social-link">Instagram</a>
+    <a href="#" class="social-link">Depop</a>
+    <a href="#" class="social-link">WhatsApp</a>
+    <a href="#" class="social-link">Email</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Arpitthrift</span>
+  <span>Made with care · All items one of a kind</span>
+</footer>
+
+<!-- ===== ITEM DETAIL MODAL ===== -->
+<div class="overlay" id="modal-overlay" onclick="overlayClose(event,'modal-overlay')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeOverlay('modal-overlay')">×</button>
+    <div class="modal-img" id="m-img"></div>
+    <div class="modal-tag" id="m-tag"></div>
+    <h3 id="m-name"></h3>
+    <div class="modal-meta" id="m-meta"></div>
+    <div class="modal-price" id="m-price"></div>
+    <div class="modal-desc" id="m-desc"></div>
+    <button class="btn" id="m-buy-btn" style="width:100%;display:block;" onclick="openCheckout()">Buy This Item</button>
+  </div>
+</div>
+
+<!-- ===== CHECKOUT MODAL ===== -->
+<div class="overlay" id="checkout-overlay" onclick="overlayClose(event,'checkout-overlay')">
+  <div class="checkout-modal">
+    <button class="modal-close" onclick="closeOverlay('checkout-overlay')">×</button>
+
+    <!-- STEP 1: Details form -->
+    <div id="checkout-step1">
+      <h3>Place Your Order</h3>
+      <p class="sub" id="co-item-summary">—</p>
+
+      <div class="order-summary">
+        <div class="os-row"><span>Item</span><span id="co-name">—</span></div>
+        <div class="os-row"><span>Size</span><span id="co-size">—</span></div>
+        <div class="os-row total"><span>Total</span><span id="co-total">—</span></div>
+      </div>
+
+      <div class="form-group"><label>Full Name *</label><input id="c-name" placeholder="Your full name" /></div>
+      <div class="form-row">
+        <div class="form-group"><label>Phone Number *</label><input id="c-phone" placeholder="10-digit number" /></div>
+        <div class="form-group"><label>Email (optional)</label><input id="c-email" placeholder="you@email.com" /></div>
+      </div>
+      <div class="form-group"><label>Address *</label><textarea id="c-address" rows="2" placeholder="House no., Street, Locality"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>City *</label><input id="c-city" placeholder="City" /></div>
+        <div class="form-group"><label>Pincode *</label><input id="c-pin" placeholder="6-digit pincode" /></div>
+      </div>
+      <div class="form-group"><label>State *</label><input id="c-state" placeholder="State" /></div>
+      <button class="btn" style="width:100%" onclick="goToPayment()">Proceed to Payment →</button>
+    </div>
+
+    <!-- STEP 2: UPI Payment -->
+    <div id="checkout-step2" style="display:none">
+      <h3>Pay via UPI</h3>
+      <p class="sub">Complete payment and confirm below</p>
+
+      <div class="upi-section">
+        <h4>Scan or pay to</h4>
+        <div class="upi-id" id="pay-upi-id">—</div>
+        <div class="upi-amount" id="pay-amount">—</div>
+        <div class="upi-qr" id="upi-qr-container"></div>
+        <p class="upi-note">Use any UPI app — GPay, PhonePe, Paytm, etc.<br/>Add your name as payment note.</p>
+      </div>
+
+      <div class="form-group"><label>UPI Transaction ID / Screenshot note *</label><input id="c-txn" placeholder="Enter your UPI transaction ID" /></div>
+      <button class="btn" style="width:100%;margin-bottom:10px" onclick="submitOrder()">Confirm Order ✓</button>
+      <button class="btn btn-outline" style="width:100%;display:block;text-align:center" onclick="backToDetails()">← Back</button>
+    </div>
+
+    <!-- STEP 3: Success -->
+    <div id="checkout-step3" style="display:none">
+      <div class="success-box">
+        <div class="tick">✅</div>
+        <h4>Order Placed!</h4>
+        <p>Thank you! Your order has been received.<br/>Arpit will contact you on your phone to confirm shipping.</p>
+        <br/>
+        <button class="btn" style="margin-top:16px" onclick="closeOverlay('checkout-overlay')">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN LOGIN ===== -->
+<div class="overlay" id="login-overlay" onclick="overlayClose(event,'login-overlay')">
+  <div class="login-box">
+    <button class="modal-close" onclick="closeOverlay('login-overlay')">×</button>
+    <h3>Admin Login</h3>
+    <div class="form-group"><label>Password</label><input type="password" id="admin-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkLogin()" /></div>
+    <button class="btn" style="width:100%" onclick="checkLogin()">Login</button>
+    <p class="login-error" id="login-error">Incorrect password. Try again.</p>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div class="overlay" id="admin-overlay" onclick="overlayClose(event,'admin-overlay')">
+  <div class="admin-panel">
+    <button class="modal-close" onclick="closeOverlay('admin-overlay')">×</button>
+    <h3>Admin Panel</h3>
+    <p class="admin-sub">Manage your listings and settings</p>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('tab-items',this)">Items</button>
+      <button class="admin-tab" onclick="switchTab('tab-add',this)">Add Item</button>
+      <button class="admin-tab" onclick="switchTab('tab-settings',this)">Settings</button>
+    </div>
+
+    <!-- ITEMS LIST -->
+    <div class="admin-section active" id="tab-items">
+      <div id="admin-items-list"></div>
+    </div>
+
+    <!-- ADD ITEM -->
+    <div class="admin-section" id="tab-add">
+      <div class="add-form">
+        <div class="form-row">
+          <input id="a-name" placeholder="Item name *" />
+          <select id="a-tag">
+            <option value="tops">Tops</option>
+            <option value="bottoms">Bottoms</option>
+            <option value="outerwear">Outerwear</option>
+            <option value="accessories">Accessories</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <input id="a-size" placeholder="Size (e.g. M, L, S/M, OS)" />
+          <input id="a-price" placeholder="Price (e.g. ₹650)" />
+        </div>
+        <input id="a-condition" placeholder="Condition (e.g. Excellent, Very Good, Good)" />
+        <textarea id="a-desc" rows="3" placeholder="Item description..."></textarea>
+        <div>
+          <label style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);display:block;margin-bottom:6px">Photo (optional)</label>
+          <div class="img-upload-area" onclick="document.getElementById('a-img-input').click()">
+            <p>Click to upload photo</p>
+            <input type="file" id="a-img-input" accept="image/*" style="display:none" onchange="previewImg(event)" />
+            <img id="a-img-preview" class="img-preview" style="display:none" />
+          </div>
+        </div>
+        <input id="a-emoji" placeholder="Emoji placeholder (e.g. 🟤) — shown if no photo" />
+        <button class="btn" onclick="addItem()">Add Item to Shop</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="admin-section" id="tab-settings">
+      <div class="settings-row">
+        <label>Your UPI ID</label>
+        <input id="s-upi" placeholder="yourname@upi" />
+      </div>
+      <div class="settings-row">
+        <label>Your Name (shown on UPI)</label>
+        <input id="s-upi-name" placeholder="Arpit" />
+      </div>
+      <div class="settings-row">
+        <label>Admin Password (to access this panel)</label>
+        <input type="password" id="s-pw" placeholder="New password" />
+      </div>
+      <div class="settings-row">
+        <label>EmailJS Service ID <small style="text-transform:none;letter-spacing:0">(from emailjs.com)</small></label>
+        <input id="s-ejs-service" placeholder="service_xxxxxxx" />
+      </div>
+      <div class="settings-row">
+        <label>EmailJS Template ID</label>
+        <input id="s-ejs-template" placeholder="template_xxxxxxx" />
+      </div>
+      <div class="settings-row">
+        <label>EmailJS Public Key</label>
+        <input id="s-ejs-key" placeholder="your_public_key" />
+      </div>
+      <button class="btn" onclick="saveSettings()">Save Settings</button>
+      <p class="save-note" id="save-note">✓ Settings saved!</p>
+      <p style="font-size:0.78rem;color:var(--mid);margin-top:20px;line-height:1.7">
+        <strong>How to get Gmail notifications:</strong><br/>
+        1. Go to <a href="https://www.emailjs.com" target="_blank" style="color:var(--accent)">emailjs.com</a> → sign up free<br/>
+        2. Add Gmail as email service → copy Service ID<br/>
+        3. Create an email template → copy Template ID<br/>
+        4. Copy your Public Key from Account settings<br/>
+        5. Paste all three above and Save Settings
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== STATE =====
+  let items = JSON.parse(localStorage.getItem('at_items') || 'null') || [
+    { id:1, name:'Linen Overshirt', tag:'tops', size:'M', condition:'Excellent', price:'₹650', sold:false, emoji:'🟤', img:null,
+      desc:'A relaxed-fit linen overshirt in warm sand. Perfect for layering. Barely worn — fabric is soft and breathable. No stains or damage.' },
+    { id:2, name:'Wool Blazer', tag:'outerwear', size:'L', condition:'Very Good', price:'₹1,200', sold:false, emoji:'🖤', img:null,
+      desc:'Structured charcoal wool blazer, single-breasted. Minor lint pilling on the sleeve which is barely visible. Timeless silhouette.' },
+    { id:3, name:'High-Waist Trousers', tag:'bottoms', size:'S', condition:'Good', price:'₹500', sold:true, emoji:'🟢', img:null,
+      desc:'Olive green tapered trousers with a comfortable elastic waist. Small pen mark on the inner seam, not visible when worn.' },
+    { id:4, name:'Silk Scarf', tag:'accessories', size:'OS', condition:'Excellent', price:'₹350', sold:false, emoji:'🔴', img:null,
+      desc:'Vintage-style printed silk scarf. Geometric print in rust and cream. No pulls or snags. Style it around your neck, wrist, or bag.' },
+    { id:5, name:'Denim Jacket', tag:'outerwear', size:'M', condition:'Good', price:'₹900', sold:false, emoji:'🔵', img:null,
+      desc:'Classic mid-wash denim jacket. Naturally distressed over time, giving it real character. All buttons intact. No tears.' },
+    { id:6, name:'Knit Polo', tag:'tops', size:'S/M', condition:'Excellent', price:'₹550', sold:false, emoji:'🟡', img:null,
+      desc:'Cream ribbed knit polo with subtle texture. Lightweight and versatile. Zero pilling, zero stains. A great basic elevated.' },
+  ];
+
+  let settings = JSON.parse(localStorage.getItem('at_settings') || 'null') || {
+    upi: 'yourname@upi',
+    upiName: 'Arpit',
+    password: 'arpit123',
+    ejsService: '', ejsTemplate: '', ejsKey: ''
+  };
+
+  let currentItem = null;
+  let currentFilter = 'all';
+  let addImgData = null;
+
+  function saveItems() { localStorage.setItem('at_items', JSON.stringify(items)); }
+  function saveSettingsData() { localStorage.setItem('at_settings', JSON.stringify(settings)); }
+
+  // ===== RENDER =====
+  function renderItems(filter) {
+    const grid = document.getElementById('items-grid');
+    const filtered = filter === 'all' ? items
+      : filter === 'available' ? items.filter(i => !i.sold)
+      : items.filter(i => i.tag === filter);
+    document.getElementById('item-count').textContent = filtered.length + ' item' + (filtered.length !== 1 ? 's' : '');
+    grid.innerHTML = filtered.map(item => `
+      <div class="item-card" onclick="openModal(${item.id})">
+        ${item.img
+          ? `<img class="item-img-real" src="${item.img}" alt="${item.name}" />`
+          : `<div class="item-img-placeholder">${item.emoji || '👗'}</div>`}
+        <div class="item-overlay">${item.sold ? 'Sold' : 'View Details'}</div>
+        <div class="item-info">
+          <div class="item-tag">${item.tag} · ${item.condition}</div>
+          <div class="item-name">${item.name}</div>
+          <div class="item-details">Size ${item.size}</div>
+          <div class="item-price ${item.sold ? 'item-sold' : ''}">
+            ${item.price}${item.sold ? '<span class="sold-badge">Sold</span>' : ''}
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function filterItems(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderItems(filter);
+  }
+
+  // ===== ITEM MODAL =====
+  function openModal(id) {
+    const item = items.find(i => i.id === id);
+    currentItem = item;
+    const imgEl = document.getElementById('m-img');
+    imgEl.innerHTML = item.img
+      ? `<img src="${item.img}" style="width:100%;height:100%;object-fit:cover" />`
+      : item.emoji || '👗';
+    document.getElementById('m-tag').textContent = item.tag + ' · ' + item.condition;
+    document.getElementById('m-name').textContent = item.name;
+    document.getElementById('m-meta').textContent = 'Size ' + item.size + (item.sold ? ' · SOLD' : ' · Available');
+    document.getElementById('m-price').textContent = item.price + (item.sold ? ' (Sold)' : '');
+    document.getElementById('m-desc').textContent = item.desc;
+    const buyBtn = document.getElementById('m-buy-btn');
+    buyBtn.textContent = item.sold ? 'Item Sold' : 'Buy This Item';
+    buyBtn.disabled = item.sold;
+    buyBtn.style.opacity = item.sold ? '0.5' : '1';
+    openOverlay('modal-overlay');
+  }
+
+  // ===== CHECKOUT =====
+  function openCheckout() {
+    if (!currentItem || currentItem.sold) return;
+    closeOverlay('modal-overlay');
+    document.getElementById('co-item-summary').textContent = currentItem.name;
+    document.getElementById('co-name').textContent = currentItem.name;
+    document.getElementById('co-size').textContent = currentItem.size;
+    document.getElementById('co-total').textContent = currentItem.price;
+    ['c-name','c-phone','c-email','c-address','c-city','c-pin','c-state','c-txn'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('checkout-step1').style.display = '';
+    document.getElementById('checkout-step2').style.display = 'none';
+    document.getElementById('checkout-step3').style.display = 'none';
+    openOverlay('checkout-overlay');
+  }
+
+  function goToPayment() {
+    const name = document.getElementById('c-name').value.trim();
+    const phone = document.getElementById('c-phone').value.trim();
+    const address = document.getElementById('c-address').value.trim();
+    const city = document.getElementById('c-city').value.trim();
+    const pin = document.getElementById('c-pin').value.trim();
+    const state = document.getElementById('c-state').value.trim();
+    if (!name || !phone || !address || !city || !pin || !state) { alert('Please fill all required fields.'); return; }
+    if (!/^\d{10}$/.test(phone)) { alert('Enter a valid 10-digit phone number.'); return; }
+    if (!/^\d{6}$/.test(pin)) { alert('Enter a valid 6-digit pincode.'); return; }
+
+    const priceNum = currentItem.price.replace(/[^\d]/g, '');
+    document.getElementById('pay-upi-id').textContent = settings.upi;
+    document.getElementById('pay-amount').textContent = currentItem.price;
+
+    // Generate UPI QR code
+    const upiUrl = `upi://pay?pa=${encodeURIComponent(settings.upi)}&pn=${encodeURIComponent(settings.upiName)}&am=${priceNum}&cu=INR&tn=${encodeURIComponent(currentItem.name)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(upiUrl)}`;
+    document.getElementById('upi-qr-container').innerHTML = `<img src="${qrUrl}" alt="UPI QR" style="width:160px;height:160px" />`;
+
+    document.getElementById('checkout-step1').style.display = 'none';
+    document.getElementById('checkout-step2').style.display = '';
+  }
+
+  function backToDetails() {
+    document.getElementById('checkout-step1').style.display = '';
+    document.getElementById('checkout-step2').style.display = 'none';
+  }
+
+  async function submitOrder() {
+    const txn = document.getElementById('c-txn').value.trim();
+    if (!txn) { alert('Please enter your UPI transaction ID.'); return; }
+
+    const orderData = {
+      item: currentItem.name,
+      size: currentItem.size,
+      price: currentItem.price,
+      name: document.getElementById('c-name').value,
+      phone: document.getElementById('c-phone').value,
+      email: document.getElementById('c-email').value,
+      address: document.getElementById('c-address').value,
+      city: document.getElementById('c-city').value,
+      pincode: document.getElementById('c-pin').value,
+      state: document.getElementById('c-state').value,
+      txn_id: txn,
+    };
+
+    // Send email via EmailJS if configured
+    if (settings.ejsKey && settings.ejsService && settings.ejsTemplate) {
+      try {
+        emailjs.init(settings.ejsKey);
+        await emailjs.send(settings.ejsService, settings.ejsTemplate, {
+          item_name: orderData.item,
+          item_size: orderData.size,
+          item_price: orderData.price,
+          customer_name: orderData.name,
+          customer_phone: orderData.phone,
+          customer_email: orderData.email,
+          customer_address: `${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}`,
+          txn_id: orderData.txn_id,
+        });
+      } catch(e) { console.warn('Email send failed:', e); }
+    }
+
+    // Mark item sold
+    const idx = items.findIndex(i => i.id === currentItem.id);
+    if (idx !== -1) { items[idx].sold = true; saveItems(); renderItems(currentFilter); }
+
+    document.getElementById('checkout-step2').style.display = 'none';
+    document.getElementById('checkout-step3').style.display = '';
+  }
+
+  // ===== ADMIN =====
+  function openAdmin() {
+    document.getElementById('admin-pw').value = '';
+    document.getElementById('login-error').style.display = 'none';
+    openOverlay('login-overlay');
+  }
+
+  function checkLogin() {
+    const pw = document.getElementById('admin-pw').value;
+    if (pw === settings.password) {
+      closeOverlay('login-overlay');
+      loadAdminPanel();
+      openOverlay('admin-overlay');
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
+  function loadAdminPanel() {
+    // Populate settings
+    document.getElementById('s-upi').value = settings.upi;
+    document.getElementById('s-upi-name').value = settings.upiName;
+    document.getElementById('s-pw').value = '';
+    document.getElementById('s-ejs-service').value = settings.ejsService;
+    document.getElementById('s-ejs-template').value = settings.ejsTemplate;
+    document.getElementById('s-ejs-key').value = settings.ejsKey;
+    renderAdminItems();
+  }
+
+  function renderAdminItems() {
+    const list = document.getElementById('admin-items-list');
+    if (!items.length) { list.innerHTML = '<p style="color:var(--mid);font-size:0.88rem;padding:20px 0">No items yet. Add your first item!</p>'; return; }
+    list.innerHTML = items.map(item => `
+      <div class="item-row">
+        <div class="item-row-img">
+          ${item.img ? `<img src="${item.img}" alt="${item.name}" />` : (item.emoji || '👗')}
+        </div>
+        <div class="item-row-info">
+          <div class="irn">${item.name} ${item.sold ? '<span style="font-size:0.65rem;background:var(--mid);color:white;padding:1px 6px;letter-spacing:0.06em">SOLD</span>' : ''}</div>
+          <div class="irm">${item.price} · Size ${item.size} · ${item.tag}</div>
+        </div>
+        <div class="item-row-actions">
+          <button class="action-btn sold-toggle" onclick="toggleSold(${item.id})">${item.sold ? 'Unmark Sold' : 'Mark Sold'}</button>
+          <button class="action-btn danger" onclick="deleteItem(${item.id})">Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function toggleSold(id) {
+    const idx = items.findIndex(i => i.id === id);
+    if (idx !== -1) { items[idx].sold = !items[idx].sold; saveItems(); renderItems(currentFilter); renderAdminItems(); }
+  }
+
+  function deleteItem(id) {
+    if (!confirm('Delete this item? This cannot be undone.')) return;
+    items = items.filter(i => i.id !== id);
+    saveItems(); renderItems(currentFilter); renderAdminItems();
+  }
+
+  function addItem() {
+    const name = document.getElementById('a-name').value.trim();
+    const price = document.getElementById('a-price').value.trim();
+    if (!name || !price) { alert('Name and price are required.'); return; }
+    const newItem = {
+      id: Date.now(),
+      name, price,
+      tag: document.getElementById('a-tag').value,
+      size: document.getElementById('a-size').value.trim() || 'OS',
+      condition: document.getElementById('a-condition').value.trim() || 'Good',
+      desc: document.getElementById('a-desc').value.trim() || '',
+      emoji: document.getElementById('a-emoji').value.trim() || '👗',
+      img: addImgData || null,
+      sold: false,
+    };
+    items.unshift(newItem);
+    saveItems(); renderItems(currentFilter); renderAdminItems();
+    ['a-name','a-price','a-size','a-condition','a-desc','a-emoji'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('a-img-preview').style.display = 'none';
+    addImgData = null;
+    switchTab('tab-items', document.querySelector('.admin-tab'));
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.admin-tab')[0].classList.add('active');
+  }
+
+  function previewImg(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      addImgData = ev.target.result;
+      const preview = document.getElementById('a-img-preview');
+      preview.src = addImgData; preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function saveSettings() {
+    if (document.getElementById('s-pw').value) settings.password = document.getElementById('s-pw').value;
+    settings.upi = document.getElementById('s-upi').value.trim();
+    settings.upiName = document.getElementById('s-upi-name').value.trim();
+    settings.ejsService = document.getElementById('s-ejs-service').value.trim();
+    settings.ejsTemplate = document.getElementById('s-ejs-template').value.trim();
+    settings.ejsKey = document.getElementById('s-ejs-key').value.trim();
+    saveSettingsData();
+    const note = document.getElementById('save-note');
+    note.style.display = 'block';
+    setTimeout(() => note.style.display = 'none', 3000);
+  }
+
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  // ===== OVERLAY HELPERS =====
+  function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+  function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+  function overlayClose(e, id) { if (e.target.id === id) closeOverlay(id); }
+
+  // ===== INIT =====
+  renderItems('all');
+</script>
+</body>
+</html>
